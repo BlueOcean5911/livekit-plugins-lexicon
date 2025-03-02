@@ -14,7 +14,7 @@ import requests
 
 from .log import logger
 
-class ModelConfig(BaseModel):
+class LLMConfig(BaseModel):
     base_url: str
     agent_id: str
     user_id: str
@@ -25,7 +25,7 @@ class LLM(llm.LLM):
     def __init__(
         self,
         *,
-        config: ModelConfig,
+        config: LLMConfig,
     ) -> None:
         super().__init__()
         self.config = config
@@ -58,7 +58,7 @@ class LLMStream(llm.LLMStream):
         self,
         llm: LLM,
         *,
-        config: ModelConfig,
+        config: LLMConfig,
         chat_ctx: llm.ChatContext,
         conn_options: APIConnectOptions,
     ) -> None:
@@ -82,15 +82,13 @@ class LLMStream(llm.LLMStream):
 
         try:
             response =  requests.post(
-                f"{self.config.base_url}/chat",
-                data={
-                    "agent_id": self.config.agent_id,
-                    "user_id": self.config.user_id,
-                    "chat_id": self.config.chat_id,
-                    "chatbot_id": self.config.chatbot_id,
-                    "message": user_msg.content,
-                },
-            )
+                f"{self.config.base_url}?message={user_msg.content}",
+            )  
+            
+            if response.status_code != 200:
+                raise APIConnectionError()
+            
+            message = response.json()["message"]
             
             self._event_ch.send_nowait(
                 llm.ChatChunk(
@@ -99,7 +97,7 @@ class LLMStream(llm.LLMStream):
                         llm.Choice(
                             delta=llm.ChoiceDelta(
                                 role="assistant",
-                                content=delta,
+                                content=message,
                             )
                         )
                     ],

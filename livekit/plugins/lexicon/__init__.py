@@ -14,11 +14,11 @@
 
 from livekit.agents import Plugin
 
-from .llm import LLM, LLMStream
+from .llm import LLM, LLMStream, LLMConfig
 from .log import logger
 from .version import __version__
 
-__all__ = ["LLM", "LLMStream"]
+__all__ = ["LLM", "LLMStream", "LLMConfig"]
 
 
 class LexiconAIPlugin(Plugin):
